@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Uno Web App</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.0/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <button onclick="deconnexion()" style="float: right; background-color: #ff4444; color: white; border: none; padding: 5px 10px; cursor: pointer;">
+            Se déconnecter
+        </button>
+        <h1>Bienvenue au Uno App</h1>
+        
+        <div id="auth-form">
+            <input type="text" id="pseudo" placeholder="Votre pseudo">
+            <input type="password" id="password" placeholder="Mot de passe">
+            <button onclick="inscription()">S'inscrire</button>
+            <button onclick="connexion()">Se connecter</button>
+        </div>
+        <p id="message"></p>
+    
+        <div id="salon-actions" style="display:none; margin-top: 20px; padding: 15px; border: 1px solid #ddd; background: #f0f0f0;">
+            <h3>Menu du Salon</h3>
+            <button onclick="creerPartie()">Creer une nouvelle partie</button>
+            <p>— OU —</p>
+            <input type="text" id="code-salon-input" placeholder="Code du salon (ex: ABC12)">
+            <button onclick="rejoindrePartieParCode()">Rejoindre</button>
+        </div>
+    
+        <div id="jeu-section" style="display:none; text-align: center; margin-top: 20px;">
+            <h2 id="affichage-code-salon" style="color: #d32f2f;"></h2>
+            <div id="social-box" style="background: #e3f2fd; padding: 10px; margin-bottom: 10px; border-radius: 5px;">
+                <strong>Joueurs dans ce salon :</strong>
+                <ul id="liste-joueurs-ul" style="list-style: none; padding: 5px;"></ul>
+            </div>
+            <div id="chat-section">
+                <h3>Chat du Salon</h3>
+                <div id="chat-messages" style="border: 1px solid #ccc; height: 100px; overflow-y: scroll; margin-bottom: 10px; padding: 10px; background: #fff;"></div>
+                <input type="text" id="chat-input" placeholder="Message...">
+                <button onclick="envoyerMessage()">Envoyer</button>
+            </div>
+    
+            <hr>
+    
+            <h2>Table de Uno</h2>
+            <div id="carte-centrale" style="width:100px; height:140px; border:2px solid white; border-radius: 10px; margin:auto; line-height:140px; font-weight:bold; font-size: 20px; color: white; box-shadow: 0 4px 8px rgba(0,0,0,0.3);">
+                --
+            </div>
+            
+            <h3>Tes Cartes</h3>
+            <div id="ma-main" style="display:flex; gap:10px; margin-top:20px; justify-content:center; flex-wrap: wrap;"></div>
+        </div>
+    <script src="script.js"></script>
+    </div>
+</body>
+</html>
