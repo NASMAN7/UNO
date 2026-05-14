@@ -4,13 +4,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import uno.model.Partie;
 import uno.service.PartieService;
 import uno.dto.ActionJeu;
-import java.util.ArrayList;
-import java.util.List;
-import uno.entity.Utilisateur;
 
 @Controller
 public class JeuController {
@@ -18,24 +16,55 @@ public class JeuController {
     @Autowired
     private PartieService partieService;
 
+    // ✅ SimpMessagingTemplate permet d'envoyer des messages à des canaux spécifiques dynamiquement
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
+
     @MessageMapping("/jeu.creer")
-    @SendTo("/topic/jeu")
-    public Partie creer(String pseudo) {
-        System.out.println("Création de partie pour : " + pseudo);
-        return partieService.creerNouvellePartie(pseudo);
+    public void creer(String pseudo) {
+        System.out.println("CREER OK : " + pseudo);
+    
+        Partie partie = partieService.creerNouvellePartie(pseudo);
+    
+        System.out.println("PARTIE CREEE : " + partie.getCodeSalon());
+    
+        messagingTemplate.convertAndSend("/topic/jeu.init/" + pseudo, partie);
+    
+        System.out.println("ENVOI TERMINE");
     }
 
     @MessageMapping("/jeu.rejoindre/{code}")
-    @SendTo("/topic/jeu")
-    public Partie rejoindre(@DestinationVariable String code, String pseudo) {
+    public void rejoindre(@DestinationVariable String code, String pseudo) {
         System.out.println("Rejoindre salon : " + code + " par " + pseudo);
-        return partieService.rejoindrePartie(code, pseudo);
+        Partie partie = partieService.rejoindrePartie(code, pseudo);
+        
+        if (partie != null) {
+            // ✅ Canal du SALON : On prévient tous ceux qui sont déjà dans ce salon précis
+            messagingTemplate.convertAndSend("/topic/jeu/" + code, partie);
+            
+            // ✅ Réponse PRIVÉE : On confirme au nouveau joueur qu'il est bien entré
+            messagingTemplate.convertAndSend("/topic/jeu.init/" + pseudo, partie);
+        } else {
+            // Optionnel : Envoyer une erreur si le salon n'existe pas
+            messagingTemplate.convertAndSend("/topic/jeu.init/" + pseudo, new Partie("ERREUR"));
+        }
     }
 
     @MessageMapping("/jeu.jouer/{codeSalon}")
-    @SendTo("/topic/jeu") 
-    public Partie jouer(@DestinationVariable String codeSalon, ActionJeu action) {
-        // Appelle la logique complète du service
-        return partieService.jouerCarte(codeSalon, action);
+public void jouer(
+        @DestinationVariable String codeSalon,
+        ActionJeu action
+) {
+
+    Partie partie =
+            partieService.jouerCarte(codeSalon, action);
+
+    if (partie != null) {
+
+        messagingTemplate.convertAndSend(
+                "/topic/jeu/" + codeSalon,
+                partie
+        );
     }
+}
 }

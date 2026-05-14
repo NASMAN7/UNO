@@ -8,7 +8,7 @@ import uno.model.Couleur;
 import uno.model.Joueur;
 import uno.model.Partie;
 import uno.model.Valeur;
-import java.util.UUID;
+
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -46,9 +46,11 @@ public class PartieService {
     }
 
     // Méthode pour permettre à d'autres de rejoindre
+// Remplacez cette méthode dans PartieService.java
     public Partie rejoindrePartie(String codeSalon, String pseudo) {
         Partie partie = partiesEnCours.get(codeSalon);
-        if (partie == null) return initialiserPartie(new ArrayList<>());
+        // ✅ Retourne null si le salon n'existe pas au lieu de créer TEST_SALON
+        if (partie == null) return null; 
 
         boolean existe = partie.getJoueurs().stream()
                 .anyMatch(j -> j.getUtilisateur().getPseudo().equals(pseudo));
@@ -57,8 +59,9 @@ public class PartieService {
             Utilisateur u = new Utilisateur();
             u.setPseudo(pseudo);
             Joueur nj = new Joueur(u);
-            // On lui donne 7 cartes
-            for(int i=0; i<7; i++) nj.getMain().add(partie.getPioche().remove(0));
+            for(int i=0; i<7; i++) {
+                if(!partie.getPioche().isEmpty()) nj.getMain().add(partie.getPioche().remove(0));
+            }
             partie.getJoueurs().add(nj);
         }
         return partie;
@@ -205,17 +208,13 @@ public class PartieService {
 
     // 1. Nouvelle méthode pour créer une partie avec un code unique
     public Partie creerNouvellePartie(String pseudoCreateur) {
-        // Génère un code court de 5 caractères (ex: XJ92L)
-        String codeSalon = UUID.randomUUID().toString().substring(0, 5).toUpperCase();
-        
+        String codeSalon = UUID.randomUUID().toString().substring(0, 5).toUpperCase(); // Ex: A1B2C
         Partie partie = new Partie(codeSalon);
         
-        // On récupère l'utilisateur (ou on en crée un temporaire pour le Joueur)
         Utilisateur u = new Utilisateur();
         u.setPseudo(pseudoCreateur);
         partie.getJoueurs().add(new Joueur(u));
         
-        // On initialise le deck
         List<Carte> deck = creerDeckComplet();
         Collections.shuffle(deck);
         partie.setPioche(deck);
